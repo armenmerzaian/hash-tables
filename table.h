@@ -474,22 +474,6 @@ class LPTable:public Table<TYPE>{
     int size_;
 
     void grow(){
-        /*Record** newArr = records_;		        
-        capacity_*=2;
-        records_=new Record*[capacity_];
-        for(int i=0; i<capacity_;++i){
-            records_[i] = nullptr;
-        }
-
-        for (int i = 0; i<capacity_/2; ++i){
-            if(newArr[i]!=nullptr){
-                insert(newArr[i]->key_, newArr[i]->data_);
-            }
-        }
-        //delete[] newArr;
-        //newArr = nullptr; 
-        */
-
         Record** newArr = new Record*[capacity_*2];
         for (int i=0; i<capacity_*2; i++) {
             if (records_[i]!=nullptr && i<capacity_) {
@@ -498,10 +482,10 @@ class LPTable:public Table<TYPE>{
             else {
                 newArr[i] = nullptr;
             }
-	}
-	capacity_=capacity_*2;
-	delete[] records_;
-	records_ = newArr;
+        }
+        capacity_=capacity_*2;
+        delete[] records_;
+        records_ = newArr;
     }
 public:
     LPTable(int capacity, double maxLoadFactor=0.7);
@@ -543,24 +527,37 @@ LPTable<TYPE>::LPTable(LPTable<TYPE>&& other){
 }
 template <class TYPE>
 bool LPTable<TYPE>::insert(const std::string& key, const TYPE& value){
-    bool ret = false;
-    int val = value;
-    Record temp(key, value);
-    string constKey = key;
-    int hashIndex = hashFunction(constKey)%capacity_;
-    if (find(key, val) == false) {
-        while (records_[hashIndex] != NULL && records_[hashIndex]->key_ != nullptr) {
-            hashIndex++;
-            hashIndex %= capacity_;
-        }
-        // if adding a new record causes the load factor to exceed the maxLoadFactor, function will grow the array. (each time the table is grown, the capacity is doubled)
-        size_++;
-        if (loadFactor() >= maxLoadFactor_) {
-            grow();
-        }
-        return true;
+    bool rc = false;
+    int idx = -1;
+    int hash = hashFunction(key)%capacity_;
+    int counter = 0;
+    while (records_[hash] != NULL && records_[hash]->key_ != key) {
+        hash = (hash + 1) % capacity_;
     }
-    return false;
+
+    if (records_[hash] == NULL) {
+        idx = -1;
+    }
+    else {
+        return false;
+    }
+
+    if(idx==-1){
+        size_t hash = hashFunction(key)%capacity_;
+        // changed this loop
+        while (records_[hash] != nullptr) {
+                hash++;
+                hash %= capacity_;
+        }
+        records_[hash] = new Record(key,value); 
+        size_++;
+        rc=true;
+    }
+
+    if (size_ > (maxLoadFactor_ * capacity_)) {
+		grow();
+	}
+    return rc; 
 }
 
 template <class TYPE>
@@ -590,15 +587,19 @@ bool LPTable<TYPE>::remove(const std::string& key){
 
 template <class TYPE>
 bool LPTable<TYPE>::find(const std::string& key, TYPE& value){
-    for(int i = 0;i<capacity_;++i){
-        if(records_[i] != nullptr){
-            if(records_[i]->key_ == key){
-                value = records_[i]->data_;
-                return true;
-            }
-        }
+    int hash = hashFunction(key)%capacity_;
+    int counter = 0;
+    while (records_[hash] != NULL && records_[hash]->key_ != key) {
+        hash = (hash + 1) % capacity_;
     }
-    return false;
+
+    if (records_[hash] == NULL) {
+        return false;
+    }
+    else {
+        value = records_[hash]->data_;
+        return true;
+    }
 }
 
 template <class TYPE>
