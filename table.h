@@ -298,6 +298,8 @@ public:
     
 };
 
+/* Constructor that takes capacity and max load factor */
+
 template <class TYPE>
 ChainingTable<TYPE>::ChainingTable(int capacity, double maxLoadFactor): Table<TYPE>(){
     capacity_= capacity;
@@ -305,13 +307,14 @@ ChainingTable<TYPE>::ChainingTable(int capacity, double maxLoadFactor): Table<TY
 	records_= new CacheList<Record>[capacity_];
 }
 
+/* Copy Constructor */
 template <class TYPE>
 ChainingTable<TYPE>::ChainingTable(const ChainingTable<TYPE>& other){
 	records_=nullptr;
 	*this=other;
 }
 
-
+/* Move Constructor */
 template <class TYPE>
 ChainingTable<TYPE>::ChainingTable(ChainingTable<TYPE>&& other){ ////goood
     maxLoadFactor_ = other.maxLoadFactor_;
@@ -325,7 +328,7 @@ ChainingTable<TYPE>::ChainingTable(ChainingTable<TYPE>&& other){ ////goood
 	other.records_ = nullptr; 
 }
 
-
+/* This function inserts a key value pair in the table */
 template <class TYPE>
 bool ChainingTable<TYPE>::insert(const string& key, const TYPE& value){
     int val = value;
@@ -341,6 +344,7 @@ bool ChainingTable<TYPE>::insert(const string& key, const TYPE& value){
     return false; 
 }
 
+/* This function modifies the matching key and return true if found */
 template <class TYPE>
 bool ChainingTable<TYPE>::modify(const std::string& key, const TYPE& value){
     TYPE temp;
@@ -354,6 +358,7 @@ bool ChainingTable<TYPE>::modify(const std::string& key, const TYPE& value){
     return false;
 }
 
+/* This function from a key pair from the table and returns true if found */
 template <class TYPE>
 bool ChainingTable<TYPE>::remove(const string& key){
   int idx = hashFunction(key) % capacity_;
@@ -372,6 +377,7 @@ bool ChainingTable<TYPE>::remove(const string& key){
   return false;
 }
 
+/* This function looks for a key pair in the table and returns true if found */
 template <class TYPE>
 bool ChainingTable<TYPE>::find(const string& key, TYPE& value){
     int idx = hashFunction(key)%capacity_;
@@ -390,6 +396,7 @@ bool ChainingTable<TYPE>::find(const string& key, TYPE& value){
   return false;
 }
 
+/* Copy Assignment Operator */
 template <class TYPE>
 const ChainingTable<TYPE>& ChainingTable<TYPE>::operator=(const ChainingTable<TYPE>& other){
     if (this != &other){
@@ -397,8 +404,7 @@ const ChainingTable<TYPE>& ChainingTable<TYPE>::operator=(const ChainingTable<TY
 		size_ = other.size_;
         capacity_ = other.capacity_;
 		delete[] records_;
-		records_ =new CacheList<Record>[capacity_];
-
+		records_ = new CacheList<Record>[capacity_];
 		for (int i = 0; i < capacity_; i++){
 			records_[i] = other.records_[i];
 		}
@@ -406,6 +412,7 @@ const ChainingTable<TYPE>& ChainingTable<TYPE>::operator=(const ChainingTable<TY
     return *this;
 }
 
+/* Move Assignment Operator */
 template <class TYPE>
 const ChainingTable<TYPE>& ChainingTable<TYPE>::operator=(ChainingTable<TYPE>&& other){
     records_ = other.records_;
@@ -473,14 +480,14 @@ class LPTable:public Table<TYPE>{
             newArr[i] = nullptr;
         }
         for (int i = 0; i < capacity_/2; i++){
-            if(records_[i]!=nullptr){
+            if (records_[i]!=nullptr){
                 int hash = hashFunction(records_[i]->key_)%capacity_;
                 while (newArr[hash] != NULL){
-                    hash=(hash+1)%capacity_;
+                    hash = (hash+1)%capacity_;
                 }
-                newArr[hash]=new Record(records_[i]->key_,records_[i]->data_);
+                newArr[hash] = new Record(records_[i]->key_,records_[i]->data_);
             }
-        } 
+        }
         delete[] records_;
         records_ = newArr;
     }
@@ -501,6 +508,7 @@ public:
     virtual int capacity() const;
 };
 
+/* Constructor that takes capacity and max load factor */
 template <class TYPE>
 LPTable<TYPE>::LPTable(int capacity, double maxLoadFactor): Table<TYPE>(){
     capacity_ = capacity;
@@ -511,12 +519,14 @@ LPTable<TYPE>::LPTable(int capacity, double maxLoadFactor): Table<TYPE>(){
     }
 }
 
+/* Copy Constructor */
 template <class TYPE>
 LPTable<TYPE>::LPTable(const LPTable<TYPE>& other){
     records_=nullptr;
 	*this=other;
 }
 
+/* Move Constructor */
 template <class TYPE>
 LPTable<TYPE>::LPTable(LPTable<TYPE>&& other){
     records_=other.records_;
@@ -527,6 +537,7 @@ LPTable<TYPE>::LPTable(LPTable<TYPE>&& other){
     other.size_=0;
 }
 
+/* This function inserts a key value pair in the table */
 template <class TYPE>
 bool LPTable<TYPE>::insert(const std::string& key, const TYPE& value){
     int hash = hashFunction(key)%capacity_;
@@ -544,6 +555,7 @@ bool LPTable<TYPE>::insert(const std::string& key, const TYPE& value){
     return true; 
 }
 
+/* This function modifies the matching key and return true if found */
 template <class TYPE>
 bool LPTable<TYPE>::modify(const std::string& key, const TYPE& value){
     int hash = hashFunction(key)%capacity_;
@@ -558,6 +570,7 @@ bool LPTable<TYPE>::modify(const std::string& key, const TYPE& value){
     return false;
 }
 
+/* This function from a key pair from the table and returns true if found */
 template <class TYPE>
 bool LPTable<TYPE>::remove(const std::string& key){
     int hash = hashFunction(key)%capacity_;
@@ -572,6 +585,7 @@ bool LPTable<TYPE>::remove(const std::string& key){
     return false;
 }
 
+/* This function looks for a key pair in the table and returns true if found */
 template <class TYPE>
 bool LPTable<TYPE>::find(const std::string& key, TYPE& value){
     int hash = hashFunction(key)%capacity_;
@@ -588,6 +602,7 @@ bool LPTable<TYPE>::find(const std::string& key, TYPE& value){
     }
 }
 
+/* Copy Assignment Operator */
 template <class TYPE>
 const LPTable<TYPE>& LPTable<TYPE>::operator=(const LPTable<TYPE>& other){  
     if (this != &other) {
@@ -600,7 +615,6 @@ const LPTable<TYPE>& LPTable<TYPE>::operator=(const LPTable<TYPE>& other){
                 records_[i] = nullptr;
             }
             else{
-                
                 auto key = other.records_[i]->key_;
                 auto data = other.records_[i]->data_;
                 records_[i] = new Record(key, data);
@@ -610,6 +624,7 @@ const LPTable<TYPE>& LPTable<TYPE>::operator=(const LPTable<TYPE>& other){
     return *this;
 }
 
+/* Move Assignment Operator */
 template <class TYPE>
 const LPTable<TYPE>& LPTable<TYPE>::operator=(LPTable<TYPE>&& other){
     records_ = other.records_;

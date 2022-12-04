@@ -37,34 +37,62 @@ int main(int argc, char* argv[]){
     std::cout << "number of records: " << numrecords << std::endl;
     std::cout << "capacity: " << cap << std::endl;
 
-    LPTable<int> table1(cap);
-    ChainingTable<int> table2(cap);
+    LPTable<int> table1(cap, 0.6);
+	LPTable<int> table2(cap, 0.7);
+	LPTable<int> table3(cap, 0.8);
+    ChainingTable<int> table4(cap, 0.6);
+	ChainingTable<int> table5(cap, 0.7);
+	ChainingTable<int> table6(cap, 0.8);
 
 
     //create a timer
-    Timer T;
+    Timer T, T2, T3, T4, T5, T6;
  
 
     for(int i=0;i<numrecords;i++){
-    	//start the timer.  think of this like its a stop watch.
-    	//this is like pressing the start button
-    	T.start();   
     	table1.insert(keys[i],data[i]);
-
-    	//stop the timer.  this is like pressing pause on a stop watch
-    	T.stop();
+		table2.insert(keys[i],data[i]);
+		table3.insert(keys[i],data[i]);
+		table4.insert(keys[i],data[i]);
+		table5.insert(keys[i],data[i]);
+		table6.insert(keys[i],data[i]);
     }
+	int val;
+	T.start();   
+	for(int i=0;i<numrecords;i++){
+    	table1.find("asdsafasfasfasfasfasfasfasfasfsaffasfsaffsaasf", val);
+    }
+	T.stop();
+	T2.start();   
+	for(int i=0;i<numrecords;i++){
+    	table2.find("asdsafasfasfasfasfasfasfasfasfsaffasfsaffsaasf", val);
+    }
+	T2.stop();
+	T3.start();
+	for(int i=0;i<numrecords;i++){
+    	table3.find("asdsafasfasfasfasfasfasfasfasfsaffasfsaffsaasf", val);
+    }
+	T3.stop();
+	T4.start();
+	for(int i=0;i<numrecords;i++){
+    	table4.find("asdsafasfasfasfasfasfasfasfasfsaffasfsaffsaasf", val);
+    }
+	T4.stop();
+	T5.start();
+	for(int i=0;i<numrecords;i++){
+    	table5.find("asdsafasfasfasfasfasfasfasfasfsaffasfsaffsaasf", val);
+    }
+	T5.stop();
+	T6.start();
+	for(int i=0;i<numrecords;i++){
+    	table6.find("asdsafasfasfasfasfasfasfasfasfsaffasfsaffsaasf", val);
+    }
+	T6.stop();
     //currtime reads the time on the stop watch
-    std::cout << "LP Table Time: " << T.currtime() << std::endl;
-    
-    Timer T2;
-    for(int i=0;i<numrecords;i++){
-    	T2.start();
-    	table2.insert(keys[i],data[i]);
-    	T2.stop();
-    }
+    std::cout << "LP Table 1 Time: " << T.currtime() << std::endl;
+	std::cout << "LP Table 2 Time: " << T2.currtime() << std::endl;
+	std::cout << "LP Table 3 Time: " << T3.currtime() << std::endl;
     std::cout << "Chaining Table Time: " << T2.currtime() << std::endl;
-
 }
 
 
