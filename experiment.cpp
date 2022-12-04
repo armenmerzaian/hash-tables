@@ -37,12 +37,12 @@ int main(int argc, char* argv[]){
     std::cout << "number of records: " << numrecords << std::endl;
     std::cout << "capacity: " << cap << std::endl;
 
-    LPTable<int> table1(cap, 0.6);
-	LPTable<int> table2(cap, 0.7);
+    LPTable<int> table1(cap, 0.4);
+	LPTable<int> table2(cap, 0.6);
 	LPTable<int> table3(cap, 0.8);
-    ChainingTable<int> table4(cap, 0.6);
-	ChainingTable<int> table5(cap, 0.7);
-	ChainingTable<int> table6(cap, 0.8);
+    ChainingTable<int> table4(cap, 0.5);
+	ChainingTable<int> table5(cap, 1.4);
+	ChainingTable<int> table6(cap, 1.8);
 
 
     //create a timer
@@ -50,10 +50,10 @@ int main(int argc, char* argv[]){
  
 
     for(int i=0;i<numrecords;i++){
-    	table1.insert(keys[i],data[i]);
+		table1.insert(keys[i],data[i]);
 		table2.insert(keys[i],data[i]);
 		table3.insert(keys[i],data[i]);
-		table4.insert(keys[i],data[i]);
+    	table4.insert(keys[i],data[i]);
 		table5.insert(keys[i],data[i]);
 		table6.insert(keys[i],data[i]);
     }
@@ -92,7 +92,9 @@ int main(int argc, char* argv[]){
     std::cout << "LP Table 1 Time: " << T.currtime() << std::endl;
 	std::cout << "LP Table 2 Time: " << T2.currtime() << std::endl;
 	std::cout << "LP Table 3 Time: " << T3.currtime() << std::endl;
-    std::cout << "Chaining Table Time: " << T2.currtime() << std::endl;
+    std::cout << "Chaining Table Time: " << T4.currtime() << std::endl;
+	std::cout << "Chaining Table Time: " << T5.currtime() << std::endl;
+	std::cout << "Chaining Table Time: " << T6.currtime() << std::endl;
 }
 
 

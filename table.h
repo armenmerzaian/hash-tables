@@ -2,10 +2,8 @@
 /*                                                           */
 /*  Starter file for a2                                      */
 /*                                                           */
-/*  Author1 Name: <name here>                                */
-/*      - class/function list/main author or main checker    */
-/*  Author2 Name: <name here>                                */
-/*      - class/function list/main author or main checker    */
+/*  Author1 Name: Yuanqing Dai                               */
+/*  Author2 Name: Armen Merzanian                            */
 /*                                                           */
 /*************************************************************/
 
@@ -335,7 +333,7 @@ bool ChainingTable<TYPE>::insert(const string& key, const TYPE& value){
 	Record temp(key, value); 
 
 	if (find(key, val) == false){
-		if (loadFactor() == maxLoadFactor_)
+		if (loadFactor() >= maxLoadFactor_)
             grow();
 		records_[hashFunction(key)%capacity_].insert(temp);
         size_++;
