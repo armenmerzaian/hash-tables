@@ -260,20 +260,19 @@ class ChainingTable :public Table<TYPE>{
 		}
 	};
 
-    CacheList<Record>* records_; // The array of lists 
-    int capacity_;       //capacity of the array
+    CacheList<Record>* records_;
+    int capacity_;
     int maxLoadFactor_;
     std::hash<std::string> hashFunction;
     int size_ = 0;
 
-	void grow(){ ////goood
-        capacity_ *= 2;
-        double halfCap = capacity_ / 2; ///added
-		CacheList<Record>* grown = records_;
+	void grow(){
+		capacity_ *= 2;
+		CacheList<Record>* biggerRecords = records_;
 		records_ = new CacheList<Record>[capacity_];
 
-		for (int i = 0; i < halfCap; i++){
-			for (typename CacheList<Record>::iterator it = grown[i].begin(); it != grown[i].end(); it++){
+		for (int i = 0; i < capacity_ / 2; i++){
+			for (typename CacheList<Record>::iterator it = biggerRecords[i].begin(); it != biggerRecords[i].end(); it++){
 				size_t idx = hashFunction((*it).key_)%capacity_;
 				records_[idx].insert(*it);
 			}
@@ -303,7 +302,6 @@ template <class TYPE>
 ChainingTable<TYPE>::ChainingTable(int capacity, double maxLoadFactor): Table<TYPE>(){
     capacity_= capacity;
     maxLoadFactor_= maxLoadFactor;
-    size_ = 0;
 	records_= new CacheList<Record>[capacity_];
 }
 
@@ -330,29 +328,27 @@ ChainingTable<TYPE>::ChainingTable(ChainingTable<TYPE>&& other){ ////goood
 
 template <class TYPE>
 bool ChainingTable<TYPE>::insert(const string& key, const TYPE& value){
-	bool ret = false;
     int val = value;
-	Record tmp(key, value); 
+	Record temp(key, value); 
 
 	if (find(key, val) == false){
-		if (loadFactor() == maxLoadFactor_){
+		if (loadFactor() == maxLoadFactor_)
             grow();
-        }
-		records_[hashFunction(key)%capacity_].insert(tmp);
-        ret = true;
+		records_[hashFunction(key)%capacity_].insert(temp);
         size_++;
+        return true;
 	}
-    return ret; 
+    return false; 
 }
 
 template <class TYPE>
 bool ChainingTable<TYPE>::modify(const std::string& key, const TYPE& value){
-    TYPE ret;
-    bool found= find(key, ret);
-    auto indx = hashFunction(key)%capacity();
+    TYPE temp;
+    bool found= find(key, temp);
+    auto i = hashFunction(key)%capacity();
 
 	if(found != false){
-		(*(records_[indx].begin())).data_= value; 
+		(*(records_[i].begin())).data_= value; 
         return true;
 	} 
     return false;
@@ -360,33 +356,32 @@ bool ChainingTable<TYPE>::modify(const std::string& key, const TYPE& value){
 
 template <class TYPE>
 bool ChainingTable<TYPE>::remove(const string& key){
-  bool ret = false;
   int idx = hashFunction(key) % capacity_;
-  CacheList<Record>* tmp = &records_[idx];
+  CacheList<Record>* temp = &records_[idx];
 
-  if(tmp != nullptr){
+  if(temp != nullptr){
     Record rec(key, TYPE{});
-    typename CacheList<Record>::iterator it = tmp->search(rec);
-    if (it != tmp->end()) {
-      ret = true;
-      tmp->erase(it);
+    typename CacheList<Record>::iterator it = temp->search(rec);
+    if (it != temp->end()) {
+      temp->erase(it);
       size_--;
+      return true;
     }
   }
  
-  return ret;
+  return false;
 }
 
 template <class TYPE>
 bool ChainingTable<TYPE>::find(const string& key, TYPE& value){
     int idx = hashFunction(key)%capacity_;
-    CacheList<Record>* tmp = &records_[idx];
+    CacheList<Record>* temp = &records_[idx];
 
-    if(tmp != nullptr)
+    if(temp != nullptr)
     {
         Record rec(key, TYPE{});
-        typename CacheList<Record>::const_iterator it = tmp->search(rec);
-        if (it!=tmp->end()) {
+        typename CacheList<Record>::const_iterator it = temp->search(rec);
+        if (it!=temp->end()) {
             value=(*it).data_;
             return true;
         }
@@ -401,7 +396,6 @@ const ChainingTable<TYPE>& ChainingTable<TYPE>::operator=(const ChainingTable<TY
 		maxLoadFactor_ = other.maxLoadFactor_;
 		size_ = other.size_;
         capacity_ = other.capacity_;
-
 		delete[] records_;
 		records_ =new CacheList<Record>[capacity_];
 
@@ -436,7 +430,7 @@ ChainingTable<TYPE>::~ChainingTable(){
 
 template <class TYPE>
 bool ChainingTable<TYPE>::isEmpty()const{
-    return numRecords()==0;
+    return numRecords() == 0;
 }
  
 template <class TYPE>
@@ -451,8 +445,7 @@ int ChainingTable<TYPE>::capacity() const{
 
 template <class TYPE>
 double ChainingTable<TYPE>::loadFactor() const { 
-    int ret = numRecords()/capacity_;
-    return ret;
+    return numRecords()/capacity_;
 }
 
 template <class TYPE>
@@ -467,23 +460,27 @@ class LPTable:public Table<TYPE>{
             }
         };
 
-    Record** records_;   //the table
-    int capacity_ = 0;      //capacity of the array
+    Record** records_;
+    int capacity_ = 0;
     double maxLoadFactor_ = 0.7;
     std::hash<std::string> hashFunction;
-    int size_;
+    int size_ = 0;
 
     void grow(){
-        Record** newArr = new Record*[capacity_*2];
-        for (int i=0; i<capacity_*2; i++) {
-            if (records_[i]!=nullptr && i<capacity_) {
-                newArr[i] = records_[i];
-            }
-            else {
-                newArr[i] = nullptr;
-            }
-        }
         capacity_=capacity_*2;
+        Record** newArr = new Record*[capacity_];
+        for(int i = 0; i < capacity_; i++){
+            newArr[i] = nullptr;
+        }
+        for (int i = 0; i < capacity_/2; i++){
+            if(records_[i]!=nullptr){
+                int hash = hashFunction(records_[i]->key_)%capacity_;
+                while (newArr[hash] != NULL){
+                    hash=(hash+1)%capacity_;
+                }
+                newArr[hash]=new Record(records_[i]->key_,records_[i]->data_);
+            }
+        } 
         delete[] records_;
         records_ = newArr;
     }
@@ -502,14 +499,12 @@ public:
     virtual bool isEmpty() const;
     virtual int numRecords() const; 
     virtual int capacity() const;
-    
- 
 };
+
 template <class TYPE>
-LPTable<TYPE>::LPTable(int capacity, double maxLoadFactor): Table<TYPE>(){//i
+LPTable<TYPE>::LPTable(int capacity, double maxLoadFactor): Table<TYPE>(){
     capacity_ = capacity;
     maxLoadFactor_ = maxLoadFactor;
-    size_ = 0;
     records_ = new Record*[capacity];
     for(int i =0; i < capacity_; i++){
         records_[i] = nullptr;
@@ -518,77 +513,68 @@ LPTable<TYPE>::LPTable(int capacity, double maxLoadFactor): Table<TYPE>(){//i
 
 template <class TYPE>
 LPTable<TYPE>::LPTable(const LPTable<TYPE>& other){
-
-
+    records_=nullptr;
+	*this=other;
 }
+
 template <class TYPE>
 LPTable<TYPE>::LPTable(LPTable<TYPE>&& other){
-
+    records_=other.records_;
+    capacity_=other.capacity_;
+    size_=other.size_;
+    other.records_=nullptr;
+    other.capacity_=0;
+    other.size_=0;
 }
+
 template <class TYPE>
 bool LPTable<TYPE>::insert(const std::string& key, const TYPE& value){
-    bool rc = false;
-    int idx = -1;
     int hash = hashFunction(key)%capacity_;
-    int counter = 0;
-    while (records_[hash] != NULL && records_[hash]->key_ != key) {
+    while (records_[hash] != NULL && records_[hash]->key_ != key && records_[hash]->key_ != "spongebob"){
         hash = (hash + 1) % capacity_;
     }
-
-    if (records_[hash] == NULL) {
-        idx = -1;
-    }
-    else {
+    if(records_[hash]!=NULL){
         return false;
     }
-
-    if(idx==-1){
-        size_t hash = hashFunction(key)%capacity_;
-        // changed this loop
-        while (records_[hash] != nullptr) {
-                hash++;
-                hash %= capacity_;
-        }
-        records_[hash] = new Record(key,value); 
-        size_++;
-        rc=true;
+    records_[hash]=new Record(key,value); 
+    size_++;
+    if(size_ > maxLoadFactor_*capacity_) {
+        grow();
     }
-
-    if (size_ > (maxLoadFactor_ * capacity_)) {
-		grow();
-	}
-    return rc; 
+    return true; 
 }
 
 template <class TYPE>
 bool LPTable<TYPE>::modify(const std::string& key, const TYPE& value){
-    int idx=-1;
-    int sz=numRecords();
-    size_t hash = hashFunction(key)%capacity_;
-    bool rc=false;
-    for(int i=0;i<capacity_;i++){
-        if(records_[i] != nullptr){
-            if(records_[i]->key_ == key){
-                idx=i;
-            }   
+    int hash = hashFunction(key)%capacity_;
+    while (records_[hash] != NULL) {
+        if (records_[hash]->key_ == key) {
+            records_[hash]->key_ = key;
+            records_[hash]->data_ = value;
+            return true;
         }
+        hash = (hash + 1) % capacity_;
     }
-    if(idx!=-1){
-        records_[idx]=new Record(key,value);
-        rc=true;
-    }
-    return rc;
+    return false;
 }
 
 template <class TYPE>
 bool LPTable<TYPE>::remove(const std::string& key){
-    return true;
+    int hash = hashFunction(key)%capacity_;
+    while (records_[hash] != NULL) {
+        if (records_[hash]->key_ == key) {
+            records_[hash]->key_ = "spongebob";
+            size_--;
+            return true;
+        }
+        hash = (hash + 1) % capacity_;
+    }
+    return false;
 }
 
 template <class TYPE>
 bool LPTable<TYPE>::find(const std::string& key, TYPE& value){
     int hash = hashFunction(key)%capacity_;
-    int counter = 0;
     while (records_[hash] != NULL && records_[hash]->key_ != key) {
         hash = (hash + 1) % capacity_;
     }
@@ -603,14 +589,40 @@ bool LPTable<TYPE>::find(const std::string& key, TYPE& value){
 }
 
 template <class TYPE>
-const LPTable<TYPE>& LPTable<TYPE>::operator=(const LPTable<TYPE>& other){
-    
+const LPTable<TYPE>& LPTable<TYPE>::operator=(const LPTable<TYPE>& other){  
+    if (this != &other) {
+        records_= new Record *[other.capacity_];
+        maxLoadFactor_ = other.maxLoadFactor_;
+        size_ = other.size_;
+        capacity_ = other.capacity_;
+        for (int i = 0; i < capacity_; i++) {
+            if (other.records_[i] == nullptr){
+                records_[i] = nullptr;
+            }
+            else{
+                
+                auto key = other.records_[i]->key_;
+                auto data = other.records_[i]->data_;
+                records_[i] = new Record(key, data);
+            }
+        }
+    }
     return *this;
 }
 
 template <class TYPE>
 const LPTable<TYPE>& LPTable<TYPE>::operator=(LPTable<TYPE>&& other){
-    return *this;
+    records_ = other.records_;
+    maxLoadFactor_ = other.maxLoadFactor_;
+	capacity_ = other.capacity_;
+	size_ = other.size_;
+		
+	other.records_ = nullptr;
+    other.maxLoadFactor_ = 0;
+	other.capacity_ = 0;
+	other.size_ = 0;	
+
+	return *this; 
 }
 
 template <class TYPE>
@@ -620,7 +632,7 @@ LPTable<TYPE>::~LPTable(){
 
 template <class TYPE>
 bool LPTable<TYPE>::isEmpty() const {
-    return numRecords()==0;
+    return numRecords() == 0;
 }
 
 template <class TYPE>
